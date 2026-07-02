@@ -1,0 +1,34 @@
+name: RSI Alerts
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # runs every 5 minutes, 24/7
+  workflow_dispatch:         # lets you also trigger it manually from GitHub
+
+jobs:
+  check-rsi:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run RSI check
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python rsi_alert.py
+
+      - name: Save updated state
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update RSI state"
+          file_pattern: state.json
