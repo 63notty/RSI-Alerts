@@ -2,8 +2,8 @@ name: RSI Alerts
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # runs every 5 minutes, 24/7
-  workflow_dispatch:         # lets you also trigger it manually from GitHub
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   check-rsi:
@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
