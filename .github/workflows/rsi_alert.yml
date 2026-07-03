@@ -29,4 +29,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update RSI state"
-          file_pattern: state.json
+          file_pattern: state.json rsi_log.csv
