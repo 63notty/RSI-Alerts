@@ -16,6 +16,7 @@ if you want to add/remove symbols. Everything else can stay as-is.
 import os
 import json
 import requests
+from datetime import datetime, timezone
 from tradingview_ta import TA_Handler, Interval
 
 # ======================= SETTINGS =======================
@@ -29,6 +30,13 @@ OVERBOUGHT = 70
 # File used to remember the last state between runs, so we only alert on
 # a NEW crossing, not every time the script runs.
 STATE_FILE = "state.json"
+
+# Every RSI value checked gets appended here with a timestamp, so if an
+# alert seems to go missing later, we can look back and see exactly what
+# the data showed at that moment. Keeps only the most recent MAX_LOG_LINES
+# entries so the file doesn't grow forever.
+LOG_FILE = "rsi_log.csv"
+MAX_LOG_LINES = 5000
 
 # Each entry: display name, TradingView symbol, exchange, and screener type.
 # screener is one of: "crypto", "forex", "cfd" (indices/metals/commodities)
@@ -78,6 +86,23 @@ def send_discord_alert(message):
         print(f"Failed to send Discord alert: {e}")
 
 
+def log_rsi(name, timeframe_label, rsi, status):
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    line = f"{timestamp},{name},{timeframe_label},{rsi},{status}\n"
+
+    lines = []
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            lines = f.readlines()
+
+    lines.append(line)
+    # keep only the most recent MAX_LOG_LINES entries so this doesn't grow forever
+    lines = lines[-MAX_LOG_LINES:]
+
+    with open(LOG_FILE, "w") as f:
+        f.writelines(lines)
+
+
 def get_status(rsi):
     if rsi <= OVERSOLD:
         return "oversold"
@@ -101,6 +126,8 @@ def check_symbol(entry, timeframe, state):
 
         new_status = get_status(rsi)
         old_status = state.get(key, "neutral")
+
+        log_rsi(entry["name"], timeframe["label"], rsi, new_status)
 
         # Only alert when we NEWLY enter oversold/overbought territory
         if new_status != old_status and new_status != "neutral":
