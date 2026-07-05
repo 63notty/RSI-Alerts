@@ -51,6 +51,9 @@ WATCHLIST = [
     {"name": "EUR/USD",   "symbol": "EURUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "GBP/USD",   "symbol": "GBPUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/JPY",   "symbol": "USDJPY",     "exchange": "OANDA",   "screener": "forex"},
+    {"name": "USD/CHF",   "symbol": "USDCHF",     "exchange": "OANDA",   "screener": "forex"},
+    {"name": "AUD/USD",   "symbol": "AUDUSD",     "exchange": "OANDA",   "screener": "forex"},
+    {"name": "USD/CAD",   "symbol": "USDCAD",     "exchange": "OANDA",   "screener": "forex"},
 ]
 
 TIMEFRAMES = [
