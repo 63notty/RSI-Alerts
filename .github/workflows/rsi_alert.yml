@@ -3,6 +3,10 @@ name: RSI Alerts
 on:
   workflow_dispatch:
 
+concurrency:
+  group: rsi-alerts
+  cancel-in-progress: false
+
 jobs:
   check-rsi:
     runs-on: ubuntu-latest
