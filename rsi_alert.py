@@ -39,21 +39,22 @@ LOG_FILE = "rsi_log.csv"
 MAX_LOG_LINES = 5000
 
 # Each entry: display name, TradingView symbol, exchange, and screener type.
-# screener is one of: "crypto", "forex", "cfd" (indices/metals/commodities)
+# screener is one of: "crypto", "forex", "cfd" (indices/metals via forex brokers), "america"
 WATCHLIST = [
     {"name": "BTC/USD",   "symbol": "BTCUSDT",    "exchange": "BINANCE", "screener": "crypto"},
     {"name": "ETH/USD",   "symbol": "ETHUSDT",    "exchange": "BINANCE", "screener": "crypto"},
-    {"name": "US OIL",    "symbol": "USOIL",      "exchange": "TVC",     "screener": "cfd"},
-    {"name": "NASDAQ 100","symbol": "NAS100USD",  "exchange": "OANDA",   "screener": "cfd"},
-    {"name": "US 500",    "symbol": "SPX500USD",  "exchange": "OANDA",   "screener": "cfd"},
+    {"name": "US OIL",    "symbol": "USOIL",      "exchange": "TVC",     "screener": "america"},
+    {"name": "NASDAQ 100","symbol": "NDX",        "exchange": "TVC",     "screener": "america"},
+    {"name": "US 500",    "symbol": "SPX",        "exchange": "TVC",     "screener": "america"},
     {"name": "XAU/USD",   "symbol": "XAUUSD",     "exchange": "OANDA",   "screener": "cfd"},
-    {"name": "XAG/USD",   "symbol": "XAGUSD",     "exchange": "OANDA",   "screener": "cfd"},
+    {"name": "XAG/USD",   "symbol": "SILVER",     "exchange": "TVC",     "screener": "america"},
     {"name": "EUR/USD",   "symbol": "EURUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "GBP/USD",   "symbol": "GBPUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/JPY",   "symbol": "USDJPY",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/CHF",   "symbol": "USDCHF",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "AUD/USD",   "symbol": "AUDUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/CAD",   "symbol": "USDCAD",     "exchange": "OANDA",   "screener": "forex"},
+    {"name": "UK 100",    "symbol": "UK100GBP",   "exchange": "OANDA",   "screener": "cfd"},
 ]
 
 TIMEFRAMES = [
