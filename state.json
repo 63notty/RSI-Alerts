@@ -10,7 +10,7 @@
   "GBPUSD_5m": "neutral",
   "GBPUSD_1h": "neutral",
   "USDJPY_5m": "overbought",
-  "USDJPY_1h": "neutral",
+  "USDJPY_1h": "overbought",
   "USDCHF_5m": "overbought",
   "USDCHF_1h": "neutral",
   "AUDUSD_5m": "neutral",
