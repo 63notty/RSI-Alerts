@@ -30,7 +30,14 @@ jobs:
         run: python rsi_alert.py
 
       - name: Save updated state
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Update RSI state"
-          file_pattern: state.json rsi_log.csv
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json rsi_log.csv
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update RSI state"
+            git pull --rebase origin main
+            git push origin main
+          fi
