@@ -1,21 +1,34 @@
 """
-RSI Discord Alert Bot — TradingView Data Edition
+RSI Discord Alert Bot — Hybrid Data Edition
 --------------------------------------------------
-Pulls RSI directly from TradingView's own servers (via the tradingview-ta
-library), so values match exactly what you'd see on tradingview.com.
+Uses TWO data sources:
+
+1. TradingView (via the tradingview-ta library) for crypto, forex, and gold —
+   these values come straight from TradingView's own servers, matching
+   what you'd see on tradingview.com exactly.
+
+2. Yahoo Finance for real stock indices and commodities (Nasdaq 100, S&P 500,
+   US Oil, Silver, UK 100) — TradingView's own API has a hard limitation
+   where it does NOT support pure index-type instruments at all, so for
+   these we pull price history directly and calculate RSI ourselves using
+   Wilder's smoothing method — the same standard formula TradingView uses
+   internally — so the numbers stay very close to what you'd see on your
+   own chart.
 
 Checks both 5-minute and 1-hour RSI (14 period) for each symbol below,
 and sends a Discord alert ONLY when RSI newly crosses below 30 (oversold)
 or above 70 (overbought) — not on every single check — so you don't get
 spammed while it sits there.
 
-You should NOT need to understand this code. Just edit WATCHLIST below
-if you want to add/remove symbols. Everything else can stay as-is.
+You should NOT need to understand this code. Just edit the two watchlists
+below if you want to add/remove symbols. Everything else can stay as-is.
 """
 
 import os
 import json
 import requests
+import pandas as pd
+import yfinance as yf
 from datetime import datetime, timezone
 from tradingview_ta import TA_Handler, Interval
 
@@ -26,6 +39,7 @@ DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
 OVERSOLD = 30
 OVERBOUGHT = 70
+RSI_PERIOD = 14
 
 # File used to remember the last state between runs, so we only alert on
 # a NEW crossing, not every time the script runs.
@@ -38,28 +52,41 @@ STATE_FILE = "state.json"
 LOG_FILE = "rsi_log.csv"
 MAX_LOG_LINES = 5000
 
+# ---- Source 1: TradingView (crypto, forex, gold) ----
 # Each entry: display name, TradingView symbol, exchange, and screener type.
-# screener is one of: "crypto", "forex", "cfd" (indices/metals via forex brokers), "america"
-WATCHLIST = [
+TV_WATCHLIST = [
     {"name": "BTC/USD",   "symbol": "BTCUSDT",    "exchange": "BINANCE", "screener": "crypto"},
     {"name": "ETH/USD",   "symbol": "ETHUSDT",    "exchange": "BINANCE", "screener": "crypto"},
-    {"name": "US OIL",    "symbol": "USOIL",      "exchange": "TVC",     "screener": "america"},
-    {"name": "NASDAQ 100","symbol": "NDX",        "exchange": "TVC",     "screener": "america"},
-    {"name": "US 500",    "symbol": "SPX",        "exchange": "TVC",     "screener": "america"},
     {"name": "XAU/USD",   "symbol": "XAUUSD",     "exchange": "OANDA",   "screener": "cfd"},
-    {"name": "XAG/USD",   "symbol": "SILVER",     "exchange": "TVC",     "screener": "america"},
     {"name": "EUR/USD",   "symbol": "EURUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "GBP/USD",   "symbol": "GBPUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/JPY",   "symbol": "USDJPY",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/CHF",   "symbol": "USDCHF",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "AUD/USD",   "symbol": "AUDUSD",     "exchange": "OANDA",   "screener": "forex"},
     {"name": "USD/CAD",   "symbol": "USDCAD",     "exchange": "OANDA",   "screener": "forex"},
-    {"name": "UK 100",    "symbol": "UK100GBP",   "exchange": "OANDA",   "screener": "cfd"},
 ]
 
-TIMEFRAMES = [
+TV_TIMEFRAMES = [
     {"label": "5m", "interval": Interval.INTERVAL_5_MINUTES},
     {"label": "1h", "interval": Interval.INTERVAL_1_HOUR},
+]
+
+# ---- Source 2: Yahoo Finance (real indices/commodities TradingView's API can't serve) ----
+# Each entry: display name, Yahoo Finance ticker.
+YF_WATCHLIST = [
+    {"name": "US OIL",     "ticker": "CL=F"},      # WTI Crude — this IS the spot price;
+                                                     # brokers' "USOIL" CFDs are themselves
+                                                     # derived from this same futures feed.
+    {"name": "NASDAQ 100", "ticker": "^NDX"},       # real cash index, not a future
+    {"name": "US 500",     "ticker": "^GSPC"},      # real cash index, not a future
+    {"name": "XAG/USD",    "ticker": "XAGUSD=X"},   # real spot silver price
+    {"name": "UK 100",     "ticker": "^FTSE"},      # real cash index, not a future
+]
+
+# Yahoo Finance interval strings differ slightly from TradingView's
+YF_TIMEFRAMES = [
+    {"label": "5m", "yf_interval": "5m"},
+    {"label": "1h", "yf_interval": "60m"},
 ]
 
 # ===========================================================================
@@ -115,7 +142,23 @@ def get_status(rsi):
     return "neutral"
 
 
-def check_symbol(entry, timeframe, state):
+def handle_result(key, name, timeframe_label, rsi, state):
+    """Shared logic: log the reading, alert on a new crossing, update state."""
+    new_status = get_status(rsi)
+    old_status = state.get(key, "neutral")
+
+    log_rsi(name, timeframe_label, rsi, new_status)
+
+    if new_status != old_status and new_status != "neutral":
+        emoji = "📉" if new_status == "oversold" else "📈"
+        send_discord_alert(
+            f"{emoji} **{name}** ({timeframe_label}) RSI is **{rsi}** — {new_status.upper()}"
+        )
+
+    state[key] = new_status
+
+
+def check_tv_symbol(entry, timeframe, state):
     key = f"{entry['symbol']}_{timeframe['label']}"
     try:
         handler = TA_Handler(
@@ -127,21 +170,47 @@ def check_symbol(entry, timeframe, state):
         analysis = handler.get_analysis()
         rsi = round(analysis.indicators["RSI"], 2)
         print(f"{entry['name']} [{timeframe['label']}]: RSI = {rsi}")
+        handle_result(key, entry["name"], timeframe["label"], rsi, state)
 
-        new_status = get_status(rsi)
-        old_status = state.get(key, "neutral")
+    except Exception as e:
+        print(f"Error checking {entry['name']} [{timeframe['label']}]: {e}")
 
-        log_rsi(entry["name"], timeframe["label"], rsi, new_status)
 
-        # Only alert when we NEWLY enter oversold/overbought territory
-        if new_status != old_status and new_status != "neutral":
-            emoji = "📉" if new_status == "oversold" else "📈"
-            send_discord_alert(
-                f"{emoji} **{entry['name']}** ({timeframe['label']}) RSI is **{rsi}** "
-                f"— {new_status.upper()}"
-            )
+def calculate_rsi(closes, period=14):
+    """Wilder's RSI — the same standard method TradingView uses internally."""
+    delta = closes.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
 
-        state[key] = new_status
+    avg_gain = gain.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+
+def check_yf_symbol(entry, timeframe, state):
+    key = f"{entry['ticker']}_{timeframe['label']}"
+    try:
+        data = yf.download(
+            entry["ticker"],
+            period="5d" if timeframe["yf_interval"] == "5m" else "60d",
+            interval=timeframe["yf_interval"],
+            progress=False,
+        )
+        if data.empty or len(data) < RSI_PERIOD + 1:
+            print(f"Not enough data for {entry['name']} [{timeframe['label']}], skipping.")
+            return
+
+        closes = data["Close"]
+        if isinstance(closes, pd.DataFrame):
+            closes = closes.iloc[:, 0]
+
+        rsi_series = calculate_rsi(closes, RSI_PERIOD)
+        rsi = round(float(rsi_series.iloc[-1]), 2)
+        print(f"{entry['name']} [{timeframe['label']}]: RSI = {rsi}")
+        handle_result(key, entry["name"], timeframe["label"], rsi, state)
 
     except Exception as e:
         print(f"Error checking {entry['name']} [{timeframe['label']}]: {e}")
@@ -149,9 +218,15 @@ def check_symbol(entry, timeframe, state):
 
 def main():
     state = load_state()
-    for entry in WATCHLIST:
-        for timeframe in TIMEFRAMES:
-            check_symbol(entry, timeframe, state)
+
+    for entry in TV_WATCHLIST:
+        for timeframe in TV_TIMEFRAMES:
+            check_tv_symbol(entry, timeframe, state)
+
+    for entry in YF_WATCHLIST:
+        for timeframe in YF_TIMEFRAMES:
+            check_yf_symbol(entry, timeframe, state)
+
     save_state(state)
 
 
