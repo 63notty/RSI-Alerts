@@ -1,5 +1,5 @@
 {
-  "BTCUSDT_5m": "overbought",
+  "BTCUSDT_5m": "neutral",
   "BTCUSDT_1h": "neutral",
   "ETHUSDT_5m": "neutral",
   "ETHUSDT_1h": "neutral",
@@ -9,7 +9,7 @@
   "EURUSD_1h": "neutral",
   "GBPUSD_5m": "overbought",
   "GBPUSD_1h": "neutral",
-  "USDJPY_5m": "neutral",
+  "USDJPY_5m": "oversold",
   "USDJPY_1h": "neutral",
   "USDCHF_5m": "neutral",
   "USDCHF_1h": "neutral",
