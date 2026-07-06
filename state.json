@@ -25,6 +25,6 @@
   "^GSPC_1h": "neutral",
   "^FTSE_5m": "neutral",
   "^FTSE_1h": "neutral",
-  "SI=F_5m": "neutral",
+  "SI=F_5m": "overbought",
   "SI=F_1h": "neutral"
 }
