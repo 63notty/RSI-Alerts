@@ -79,7 +79,9 @@ YF_WATCHLIST = [
                                                      # derived from this same futures feed.
     {"name": "NASDAQ 100", "ticker": "^NDX"},       # real cash index, not a future
     {"name": "US 500",     "ticker": "^GSPC"},      # real cash index, not a future
-    {"name": "XAG/USD",    "ticker": "XAGUSD=X"},   # real spot silver price
+    {"name": "XAG/USD",    "ticker": "SI=F"},       # Silver futures — same reasoning as oil:
+                                                     # this is the underlying price feed
+                                                     # brokers' silver CFDs are derived from.
     {"name": "UK 100",     "ticker": "^FTSE"},      # real cash index, not a future
 ]
 
