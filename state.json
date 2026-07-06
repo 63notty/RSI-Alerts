@@ -21,7 +21,7 @@
   "CL=F_1h": "neutral",
   "^NDX_5m": "neutral",
   "^NDX_1h": "neutral",
-  "^GSPC_5m": "neutral",
+  "^GSPC_5m": "overbought",
   "^GSPC_1h": "neutral",
   "^FTSE_5m": "neutral",
   "^FTSE_1h": "neutral",
