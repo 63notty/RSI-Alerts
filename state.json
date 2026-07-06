@@ -13,7 +13,7 @@
   "USDJPY_1h": "overbought",
   "USDCHF_5m": "neutral",
   "USDCHF_1h": "neutral",
-  "AUDUSD_5m": "neutral",
+  "AUDUSD_5m": "oversold",
   "AUDUSD_1h": "neutral",
   "USDCAD_5m": "neutral",
   "USDCAD_1h": "overbought",
@@ -25,6 +25,6 @@
   "^GSPC_1h": "neutral",
   "^FTSE_5m": "neutral",
   "^FTSE_1h": "neutral",
-  "SI=F_5m": "neutral",
+  "SI=F_5m": "oversold",
   "SI=F_1h": "neutral"
 }
