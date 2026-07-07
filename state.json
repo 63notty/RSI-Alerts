@@ -18,7 +18,7 @@
   "USDCAD_5m": "neutral",
   "USDCAD_1h": "neutral",
   "CL=F_5m": "neutral",
-  "CL=F_1h": "neutral",
+  "CL=F_1h": "overbought",
   "^NDX_5m": "oversold",
   "^NDX_1h": "neutral",
   "^GSPC_5m": "oversold",
