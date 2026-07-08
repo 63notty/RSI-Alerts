@@ -26,7 +26,7 @@
   "^FTSE_5m": "oversold",
   "^FTSE_1h": "oversold",
   "SI=F_5m": "oversold",
-  "SI=F_1h": "oversold",
+  "SI=F_1h": "neutral",
   "NQ=F_5m": "oversold",
   "NQ=F_1h": "oversold",
   "ES=F_5m": "oversold",
