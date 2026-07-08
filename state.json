@@ -29,6 +29,6 @@
   "SI=F_1h": "oversold",
   "NQ=F_5m": "neutral",
   "NQ=F_1h": "oversold",
-  "ES=F_5m": "neutral",
+  "ES=F_5m": "oversold",
   "ES=F_1h": "oversold"
 }
