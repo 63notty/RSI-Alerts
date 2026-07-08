@@ -77,8 +77,11 @@ YF_WATCHLIST = [
     {"name": "US OIL",     "ticker": "CL=F"},      # WTI Crude — this IS the spot price;
                                                      # brokers' "USOIL" CFDs are themselves
                                                      # derived from this same futures feed.
-    {"name": "NASDAQ 100", "ticker": "^NDX"},       # real cash index, not a future
-    {"name": "US 500",     "ticker": "^GSPC"},      # real cash index, not a future
+    {"name": "NASDAQ 100", "ticker": "NQ=F"},      # futures — cash index (^NDX) goes stale
+                                                     # outside NYSE hours; your broker's CFD
+                                                     # tracks futures overnight, so this matches.
+    {"name": "US 500",     "ticker": "ES=F"},       # same reasoning — futures trade ~23/5,
+                                                     # matching your broker's overnight pricing.
     {"name": "XAG/USD",    "ticker": "SI=F"},       # Silver futures — same reasoning as oil:
                                                      # this is the underlying price feed
                                                      # brokers' silver CFDs are derived from.
