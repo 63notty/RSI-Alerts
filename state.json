@@ -24,11 +24,11 @@
   "^GSPC_5m": "neutral",
   "^GSPC_1h": "neutral",
   "^FTSE_5m": "oversold",
-  "^FTSE_1h": "neutral",
+  "^FTSE_1h": "oversold",
   "SI=F_5m": "oversold",
   "SI=F_1h": "oversold",
   "NQ=F_5m": "neutral",
   "NQ=F_1h": "oversold",
-  "ES=F_5m": "oversold",
+  "ES=F_5m": "neutral",
   "ES=F_1h": "oversold"
 }
