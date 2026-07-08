@@ -18,7 +18,7 @@
   "USDCAD_5m": "overbought",
   "USDCAD_1h": "neutral",
   "CL=F_5m": "neutral",
-  "CL=F_1h": "overbought",
+  "CL=F_1h": "neutral",
   "^NDX_5m": "neutral",
   "^NDX_1h": "neutral",
   "^GSPC_5m": "neutral",
@@ -26,9 +26,9 @@
   "^FTSE_5m": "neutral",
   "^FTSE_1h": "neutral",
   "SI=F_5m": "neutral",
-  "SI=F_1h": "oversold",
+  "SI=F_1h": "neutral",
   "NQ=F_5m": "neutral",
   "NQ=F_1h": "neutral",
   "ES=F_5m": "neutral",
-  "ES=F_1h": "oversold"
+  "ES=F_1h": "neutral"
 }
