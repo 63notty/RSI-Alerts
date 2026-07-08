@@ -7,7 +7,7 @@
   "XAUUSD_1h": "neutral",
   "EURUSD_5m": "neutral",
   "EURUSD_1h": "neutral",
-  "GBPUSD_5m": "neutral",
+  "GBPUSD_5m": "overbought",
   "GBPUSD_1h": "neutral",
   "USDJPY_5m": "neutral",
   "USDJPY_1h": "neutral",
@@ -27,7 +27,7 @@
   "^FTSE_1h": "neutral",
   "SI=F_5m": "neutral",
   "SI=F_1h": "neutral",
-  "NQ=F_5m": "overbought",
+  "NQ=F_5m": "neutral",
   "NQ=F_1h": "neutral",
   "ES=F_5m": "neutral",
   "ES=F_1h": "neutral"
