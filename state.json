@@ -1,5 +1,5 @@
 {
-  "BTCUSDT_5m": "neutral",
+  "BTCUSDT_5m": "overbought",
   "BTCUSDT_1h": "neutral",
   "ETHUSDT_5m": "neutral",
   "ETHUSDT_1h": "neutral",
@@ -25,7 +25,7 @@
   "^GSPC_1h": "neutral",
   "^FTSE_5m": "oversold",
   "^FTSE_1h": "neutral",
-  "SI=F_5m": "neutral",
+  "SI=F_5m": "overbought",
   "SI=F_1h": "neutral",
   "NQ=F_5m": "overbought",
   "NQ=F_1h": "neutral",
