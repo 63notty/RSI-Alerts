@@ -13,7 +13,7 @@
   "USDJPY_1h": "neutral",
   "USDCHF_5m": "neutral",
   "USDCHF_1h": "neutral",
-  "AUDUSD_5m": "neutral",
+  "AUDUSD_5m": "oversold",
   "AUDUSD_1h": "neutral",
   "USDCAD_5m": "neutral",
   "USDCAD_1h": "oversold",
@@ -28,7 +28,7 @@
   "SI=F_5m": "oversold",
   "SI=F_1h": "neutral",
   "NQ=F_5m": "oversold",
-  "NQ=F_1h": "neutral",
+  "NQ=F_1h": "oversold",
   "ES=F_5m": "oversold",
   "ES=F_1h": "oversold"
 }
