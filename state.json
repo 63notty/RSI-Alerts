@@ -27,7 +27,7 @@
   "^FTSE_1h": "neutral",
   "SI=F_5m": "neutral",
   "SI=F_1h": "neutral",
-  "NQ=F_5m": "neutral",
+  "NQ=F_5m": "overbought",
   "NQ=F_1h": "neutral",
   "ES=F_5m": "neutral",
   "ES=F_1h": "neutral"
