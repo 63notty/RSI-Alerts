@@ -1,5 +1,5 @@
 """
-RSI Discord Alert Bot — Hybrid Data Edition
+RSI Discord Alert Bot — Hybrid Data Edition (Parallelized)
 --------------------------------------------------
 Uses TWO data sources:
 
@@ -15,9 +15,12 @@ Uses TWO data sources:
    internally — so the numbers stay very close to what you'd see on your
    own chart.
 
-Checks both 5-minute and 1-hour RSI (14 period) for each symbol below,
-and sends a Discord alert ONLY when RSI newly crosses below 30 (oversold)
-or above 70 (overbought) — not on every single check — so you don't get
+All symbols are checked AT THE SAME TIME (in parallel) instead of one after
+another, so a full run finishes quickly and doesn't pile up against the
+next scheduled trigger.
+
+Sends a Discord alert ONLY when RSI newly crosses below 30 (oversold) or
+above 70 (overbought) — not on every single check — so you don't get
 spammed while it sits there.
 
 You should NOT need to understand this code. Just edit the two watchlists
@@ -26,34 +29,28 @@ below if you want to add/remove symbols. Everything else can stay as-is.
 
 import os
 import json
+import threading
 import requests
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tradingview_ta import TA_Handler, Interval
 
 # ======================= SETTINGS =======================
 
-# Discord webhook URL — comes from a GitHub Secret (see setup guide), not hardcoded here.
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
 
 OVERSOLD = 30
 OVERBOUGHT = 70
 RSI_PERIOD = 14
 
-# File used to remember the last state between runs, so we only alert on
-# a NEW crossing, not every time the script runs.
 STATE_FILE = "state.json"
-
-# Every RSI value checked gets appended here with a timestamp, so if an
-# alert seems to go missing later, we can look back and see exactly what
-# the data showed at that moment. Keeps only the most recent MAX_LOG_LINES
-# entries so the file doesn't grow forever.
 LOG_FILE = "rsi_log.csv"
 MAX_LOG_LINES = 5000
 
-# ---- Source 1: TradingView (crypto, forex, gold) ----
-# Each entry: display name, TradingView symbol, exchange, and screener type.
+MAX_WORKERS = 10
+
 TV_WATCHLIST = [
     {"name": "BTC/USD",   "symbol": "BTCUSDT",    "exchange": "BINANCE", "screener": "crypto"},
     {"name": "ETH/USD",   "symbol": "ETHUSDT",    "exchange": "BINANCE", "screener": "crypto"},
@@ -71,30 +68,22 @@ TV_TIMEFRAMES = [
     {"label": "1h", "interval": Interval.INTERVAL_1_HOUR},
 ]
 
-# ---- Source 2: Yahoo Finance (real indices/commodities TradingView's API can't serve) ----
-# Each entry: display name, Yahoo Finance ticker.
 YF_WATCHLIST = [
-    {"name": "US OIL",     "ticker": "CL=F"},      # WTI Crude — this IS the spot price;
-                                                     # brokers' "USOIL" CFDs are themselves
-                                                     # derived from this same futures feed.
-    {"name": "NASDAQ 100", "ticker": "NQ=F"},      # futures — cash index (^NDX) goes stale
-                                                     # outside NYSE hours; your broker's CFD
-                                                     # tracks futures overnight, so this matches.
-    {"name": "US 500",     "ticker": "ES=F"},       # same reasoning — futures trade ~23/5,
-                                                     # matching your broker's overnight pricing.
-    {"name": "XAG/USD",    "ticker": "SI=F"},       # Silver futures — same reasoning as oil:
-                                                     # this is the underlying price feed
-                                                     # brokers' silver CFDs are derived from.
-    {"name": "UK 100",     "ticker": "^FTSE"},      # real cash index, not a future
+    {"name": "US OIL",     "ticker": "CL=F"},
+    {"name": "NASDAQ 100", "ticker": "NQ=F"},
+    {"name": "US 500",     "ticker": "ES=F"},
+    {"name": "XAG/USD",    "ticker": "SI=F"},
+    {"name": "UK 100",     "ticker": "^FTSE"},
 ]
 
-# Yahoo Finance interval strings differ slightly from TradingView's
 YF_TIMEFRAMES = [
     {"label": "5m", "yf_interval": "5m"},
     {"label": "1h", "yf_interval": "60m"},
 ]
 
 # ===========================================================================
+
+_state_lock = threading.Lock()
 
 
 def load_state():
@@ -132,7 +121,6 @@ def log_rsi(name, timeframe_label, rsi, status):
             lines = f.readlines()
 
     lines.append(line)
-    # keep only the most recent MAX_LOG_LINES entries so this doesn't grow forever
     lines = lines[-MAX_LOG_LINES:]
 
     with open(LOG_FILE, "w") as f:
@@ -148,19 +136,19 @@ def get_status(rsi):
 
 
 def handle_result(key, name, timeframe_label, rsi, state):
-    """Shared logic: log the reading, alert on a new crossing, update state."""
-    new_status = get_status(rsi)
-    old_status = state.get(key, "neutral")
+    with _state_lock:
+        new_status = get_status(rsi)
+        old_status = state.get(key, "neutral")
 
-    log_rsi(name, timeframe_label, rsi, new_status)
+        log_rsi(name, timeframe_label, rsi, new_status)
 
-    if new_status != old_status and new_status != "neutral":
-        emoji = "📉" if new_status == "oversold" else "📈"
-        send_discord_alert(
-            f"{emoji} **{name}** ({timeframe_label}) RSI is **{rsi}** — {new_status.upper()}"
-        )
+        if new_status != old_status and new_status != "neutral":
+            emoji = "📉" if new_status == "oversold" else "📈"
+            send_discord_alert(
+                f"{emoji} **{name}** ({timeframe_label}) RSI is **{rsi}** — {new_status.upper()}"
+            )
 
-    state[key] = new_status
+        state[key] = new_status
 
 
 def check_tv_symbol(entry, timeframe, state):
@@ -182,7 +170,6 @@ def check_tv_symbol(entry, timeframe, state):
 
 
 def calculate_rsi(closes, period=14):
-    """Wilder's RSI — the same standard method TradingView uses internally."""
     delta = closes.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
@@ -224,13 +211,18 @@ def check_yf_symbol(entry, timeframe, state):
 def main():
     state = load_state()
 
-    for entry in TV_WATCHLIST:
-        for timeframe in TV_TIMEFRAMES:
-            check_tv_symbol(entry, timeframe, state)
+    tasks = []
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        for entry in TV_WATCHLIST:
+            for timeframe in TV_TIMEFRAMES:
+                tasks.append(executor.submit(check_tv_symbol, entry, timeframe, state))
 
-    for entry in YF_WATCHLIST:
-        for timeframe in YF_TIMEFRAMES:
-            check_yf_symbol(entry, timeframe, state)
+        for entry in YF_WATCHLIST:
+            for timeframe in YF_TIMEFRAMES:
+                tasks.append(executor.submit(check_yf_symbol, entry, timeframe, state))
+
+        for task in as_completed(tasks):
+            task.result()
 
     save_state(state)
 
