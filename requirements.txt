@@ -1,4 +1,2 @@
 tradingview-ta
 requests
-yfinance
-pandas
