@@ -2,7 +2,7 @@
 RSI Discord Alert Bot — Final Stable Hybrid Edition
 --------------------------------------------------
 Uses TWO data sources, based on thorough testing of what's actually
-supported:
+supported for free, with no broker account or country restrictions:
 
 1. TradingView (via tradingview-ta) for crypto, forex, and gold — pulled
    directly from TradingView's own servers using exchanges confirmed to
