@@ -34,7 +34,7 @@
   "XAUUSD_OANDA_5m": "neutral",
   "ETHUSDT_BINANCE_1h": "neutral",
   "ETHUSDT_BINANCE_5m": "neutral",
-  "BTCUSDT_BINANCE_1h": "neutral",
+  "BTCUSDT_BINANCE_1h": "overbought",
   "XAUUSD_OANDA_1h": "neutral",
   "BTCUSDT_BINANCE_5m": "neutral",
   "USDCAD_OANDA_5m": "overbought",
