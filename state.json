@@ -16,7 +16,7 @@
   "AUDUSD_5m": "neutral",
   "AUDUSD_1h": "neutral",
   "USDCAD_5m": "oversold",
-  "USDCAD_1h": "neutral",
+  "USDCAD_1h": "oversold",
   "CL=F_5m": "neutral",
   "CL=F_1h": "overbought",
   "^NDX_5m": "neutral",
