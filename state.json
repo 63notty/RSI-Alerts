@@ -8,7 +8,7 @@
   "EURUSD_5m": "overbought",
   "EURUSD_1h": "overbought",
   "GBPUSD_5m": "overbought",
-  "GBPUSD_1h": "overbought",
+  "GBPUSD_1h": "neutral",
   "USDJPY_5m": "oversold",
   "USDJPY_1h": "oversold",
   "USDCHF_5m": "oversold",
